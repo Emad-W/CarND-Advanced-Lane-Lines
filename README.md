@@ -50,6 +50,7 @@ Access [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points from here
 [image3]: ./images_writeup/straight_lines2_binaryMask.jpg "Binary Example"
 [image4]: ./images_writeup/straight_lines2_Output_Mask.jpg "Fit Visual"
 [image5]: ./images_writeup/straight_lines2_result.jpg "Output"
+[image6]: ./images_writeup/calibration1.jpg "Calibration"
 [video1]: ./project_video.mp4 "Video"
 
 
@@ -96,7 +97,7 @@ I then used the output `objpoints` and `imgpoints` to compute the camera calibra
 
 Here is the obtained result: 
 
-![alt text][image1]
+![alt text][image6]
 
 
 ---
