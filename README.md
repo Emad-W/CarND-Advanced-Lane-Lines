@@ -1,4 +1,4 @@
-## Advanced Lane Finding
+## Advanced Lane Finding Project
 [![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
 ![Lanes Image](./images_writeup/straight_lines2_result.jpg)
 
@@ -138,62 +138,88 @@ Here's an example of my output after applying this step.
 
 #### 3. Perspective transformation.
 
-The code for perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
+The code for perspective transform is by using hardcode four fixed source points mapped to another destination points in the following manner:
 
 ```python
-src = np.float32(
-    [[(img_size[0] / 2) - 55, img_size[1] / 2 + 100],
-    [((img_size[0] / 6) - 10), img_size[1]],
-    [(img_size[0] * 5 / 6) + 60, img_size[1]],
-    [(img_size[0] / 2 + 55), img_size[1] / 2 + 100]])
-dst = np.float32(
-    [[(img_size[0] / 4), 0],
-    [(img_size[0] / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), 0]])
+# Warp and prespectie transform
+src = np.float32([[481,520],[799,520],[213,690],[1065,690]])
+dst = np.float32([[214,520],[1065,520],[214,690],[1065,690]])
 ```
 
 This resulted in the following source and destination points:
 
 | Source        | Destination   | 
 |:-------------:|:-------------:| 
-| 585, 460      | 320, 0        | 
-| 203, 720      | 320, 720      |
-| 1127, 720     | 960, 720      |
-| 695, 460      | 960, 0        |
+| 481, 520      | 214, 520        | 
+| 799, 520      | 1065, 520      |
+| 213, 690     | 214, 690      |
+| 1065, 690      | 1065, 690      |
 
-I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
+this transform was verified by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image as shown hereunder.
+
+![alt text][image2]
+
+#### 4. Identifiying lane-line pixels and fitting their positions with a polynomial
+
+After extracting lane lines as show above, identifying lane line and fitting the 2nd order polynomial to detect the lane lines and the area in between, this part is addressed through `fit_polynomial()` where the this function uses the lists that contain the pixels definning the lane lines that are generated through the 2nd function `find_lane_pixels()`, and then it curve fit this lanes in a 2nd order polynomial and then plot this polynomial and report back the 3 values for each lane line, the output of this step is then visualized in a mask as follows :
 
 ![alt text][image4]
 
-#### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
+#### 5. Radius of curvature of the lane and the position of the vehicle with respect to center.
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+Using the polynomial values obtained, we can calculate the radius of curvature at certain point on the curve as follows:
+```python
+
+    left_curverad = 0  ## Implement the calculation of the left line here
+    left_curverad = ((1 + (2*left_fit[0]*y_eval*ym_per_pix + left_fit[1])**2)**1.5) / np.absolute(2*left_fit[0])
+    right_curverad = 0  ## Implement the calculation of the right line here
+    right_curverad = ((1 + (2*right_fit[0]*y_eval*ym_per_pix + right_fit[1])**2)**1.5) / np.absolute(2*right_fit[0])
+    
+```
+Afterwards, Bias is calculated by back plotting points on the image and calculating the difference of x-axis value between left, right lanes with respect to the middle assuming that the camera is in the center of the car. 
+```python
+    ### Calculate Bias from center
+    
+    middle = Fit.binary_warped.shape[1] / 2
+    
+    dist_left = (middle - left_fitx[Fit.binary_warped.shape[0]-1])
+    
+    dist_right = (right_fitx[Fit.binary_warped.shape[0]-1] - middle)
+    diff=(dist_left - dist_right) * xm_per_pix
+    
+```
+
+
+#### 6. Final result.
+
+Merging all the previous steps and annotating it with the result of Radius curvature and Car Bias, Here is an example of a final output on a test image:
 
 ![alt text][image5]
-
-#### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
-
-I did this in lines # through # in my code in `my_other_file.py`
-
-#### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
-
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
-
-![alt text][image6]
 
 ---
 
 ### Pipeline (video)
 
-#### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
+#### Final video output.
 
-Here's a [link to my video result](./project_video.mp4)
+By applying the whole steps on a frame by frame basis and taking into consideration sanity checks and previous information over frames and ensuring the correctness of the lane detections as well as adding some additional robustness check. Here's a [link to my video result](./test_videos_output//project_video.mp4)
 
 ---
 
 ### Discussion
 
-#### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
+#### Problems / issues and future work
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+In this sample video, the main struggle was when the system can no longer identify lane lines from the background as the road is so bright such that our thresholding method fails to identify lane lines.
+
+Other issue is when there is a sharp turn or when one of the lane lines is not included in the frame and it has to be assumed to match the other lane line.
+
+These first problem could be addressed by implementing an automatic function that can easily identify the amount of illuminated pixels in the background and apply a proper threshold to compensate the higher value of illumination to make the algorithm smarter in tough light and background varying situations.
+
+For the 2nd issue, implementing a function to check on lane by lane basis and calculate if the other lane should be expected within the image or out of camera boundaries would be a good solution, and will lead us to take corrective action to compensate over this limitation in our equipment.
+
+
+---
+
+Thanks for spending some time checking our work.
+---
